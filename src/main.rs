@@ -1,13 +1,13 @@
 use id3::{Tag, TagLike};
 
-fn check_tag_info(tag: &Tag) -> (&str, &str, &str) {
-    let title = match tag.title() {
-        Some(val) => val,
-        None => {
-            println!("Do something graceful in failure =P");
-            "failure"
-        }
-    };
+struct SongInfo<'a> {
+    artist: &'a str,
+    album: &'a str,
+    title: Option<&'a str>,
+}
+
+fn check_tag_info(tag: &Tag) -> SongInfo {
+    let title = tag.title();
 
     let artist = match tag.artist() {
         Some(val) => val,
@@ -25,7 +25,11 @@ fn check_tag_info(tag: &Tag) -> (&str, &str, &str) {
         }
     };
 
-    (title, artist, album)
+    SongInfo {
+        artist: artist,
+        album: album,
+        title: title
+    }
 }
 
 #[cfg(test)]
@@ -43,14 +47,9 @@ mod tests {
         tag.set_title(String::from(dummy_title));
         tag.set_artist(String::from(dummy_artist));
         tag.set_album(String::from(dummy_album));
-        let expected = (
-            String::from(dummy_title),
-            String::from(dummy_artist),
-            String::from(dummy_album),
-        );
         let result = check_tag_info(&tag);
-        assert_eq!(result.0, expected.0);
-        assert_eq!(result.1, expected.1);
-        assert_eq!(result.2, expected.2);
+        assert_eq!(result.title, Some(dummy_title));
+        assert_eq!(result.artist, dummy_artist);
+        assert_eq!(result.album, dummy_album);
     }
 }
