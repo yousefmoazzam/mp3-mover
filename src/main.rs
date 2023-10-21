@@ -52,4 +52,17 @@ mod tests {
         assert_eq!(result.artist, dummy_artist);
         assert_eq!(result.album, dummy_album);
     }
+
+    #[test]
+    fn tag_with_missing_title() {
+        let mut tag = Tag::new();
+        let dummy_artist = "Dummy Artist";
+        let dummy_album = "Dummy Album";
+        tag.set_artist(dummy_artist);
+        tag.set_album(dummy_album);
+        let result = check_tag_info(&tag);
+        assert_eq!(result.title, None);
+        assert_eq!(result.artist, dummy_artist);
+        assert_eq!(result.album, dummy_album);
+    }
 }
