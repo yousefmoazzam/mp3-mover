@@ -35,8 +35,9 @@ fn check_tag_info(tag: &Tag) -> Result<SongInfo, MissingSongInfo> {
     let album = match tag.album() {
         Some(val) => val,
         None => {
-            println!("Do something graceful in failure =P");
-            "failure"
+            return Err(
+                MissingSongInfo { missing_field: String::from("album") }
+            )
         }
     };
 
@@ -90,5 +91,16 @@ mod tests {
         tag.set_album(dummy_album);
         let result = check_tag_info(&tag).unwrap_err();
         assert_eq!(result.to_string(), "Missing field: artist");
+    }
+
+    #[test]
+    fn tag_with_missing_album() {
+        let mut tag = Tag::new();
+        let dummy_title = "Dummy Title";
+        let dummy_artist = "Dummy Artist";
+        tag.set_title(dummy_title);
+        tag.set_artist(dummy_artist);
+        let result = check_tag_info(&tag).unwrap_err();
+        assert_eq!(result.to_string(), "Missing field: album");
     }
 }
