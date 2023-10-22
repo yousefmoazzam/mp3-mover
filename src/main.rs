@@ -6,7 +6,10 @@ struct SongInfo<'a> {
     title: Option<&'a str>,
 }
 
-fn check_tag_info(tag: &Tag) -> SongInfo {
+#[derive(Debug)]
+struct MissingSongInfo;
+
+fn check_tag_info(tag: &Tag) -> Result<SongInfo, MissingSongInfo> {
     let title = tag.title();
 
     let artist = match tag.artist() {
@@ -25,11 +28,11 @@ fn check_tag_info(tag: &Tag) -> SongInfo {
         }
     };
 
-    SongInfo {
+    Ok(SongInfo {
         artist: artist,
         album: album,
         title: title
-    }
+    })
 }
 
 #[cfg(test)]
@@ -47,7 +50,7 @@ mod tests {
         tag.set_title(String::from(dummy_title));
         tag.set_artist(String::from(dummy_artist));
         tag.set_album(String::from(dummy_album));
-        let result = check_tag_info(&tag);
+        let result = check_tag_info(&tag).unwrap();
         assert_eq!(result.title, Some(dummy_title));
         assert_eq!(result.artist, dummy_artist);
         assert_eq!(result.album, dummy_album);
@@ -60,7 +63,7 @@ mod tests {
         let dummy_album = "Dummy Album";
         tag.set_artist(dummy_artist);
         tag.set_album(dummy_album);
-        let result = check_tag_info(&tag);
+        let result = check_tag_info(&tag).unwrap();
         assert_eq!(result.title, None);
         assert_eq!(result.artist, dummy_artist);
         assert_eq!(result.album, dummy_album);
