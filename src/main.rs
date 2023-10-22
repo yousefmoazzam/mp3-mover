@@ -1,5 +1,8 @@
+use std::fmt::Display;
+
 use id3::{Tag, TagLike};
 
+#[derive(Debug)]
 struct SongInfo<'a> {
     artist: &'a str,
     album: &'a str,
@@ -7,7 +10,15 @@ struct SongInfo<'a> {
 }
 
 #[derive(Debug)]
-struct MissingSongInfo;
+struct MissingSongInfo {
+    missing_field: String,
+}
+
+impl Display for MissingSongInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Missing field: {}", self.missing_field)
+    }
+}
 
 fn check_tag_info(tag: &Tag) -> Result<SongInfo, MissingSongInfo> {
     let title = tag.title();
@@ -15,8 +26,9 @@ fn check_tag_info(tag: &Tag) -> Result<SongInfo, MissingSongInfo> {
     let artist = match tag.artist() {
         Some(val) => val,
         None => {
-            println!("Do something graceful in failure =P");
-            "failure"
+            return Err(
+                MissingSongInfo{ missing_field: String::from("artist") }
+            )
         }
     };
 
@@ -67,5 +79,16 @@ mod tests {
         assert_eq!(result.title, None);
         assert_eq!(result.artist, dummy_artist);
         assert_eq!(result.album, dummy_album);
+    }
+
+    #[test]
+    fn tag_with_missing_artist() {
+        let mut tag = Tag::new();
+        let dummy_title = "Dummy Title";
+        let dummy_album = "Dummy Album";
+        tag.set_title(dummy_title);
+        tag.set_album(dummy_album);
+        let result = check_tag_info(&tag).unwrap_err();
+        assert_eq!(result.to_string(), "Missing field: artist");
     }
 }
