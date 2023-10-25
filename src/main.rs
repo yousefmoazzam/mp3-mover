@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, path::{Path, PathBuf}, fs::create_dir_all, io::ErrorKind};
 
 use id3::{Tag, TagLike};
 
@@ -48,9 +48,19 @@ fn check_tag_info(tag: &Tag) -> Result<SongInfo, MissingSongInfo> {
     })
 }
 
+
+fn create_song_dir(outdir: &impl AsRef<Path>,  artist: &str, album: &str) -> Result<PathBuf, ErrorKind> {
+    let mut outdir_path = outdir.as_ref().to_path_buf();
+    outdir_path.push(artist);
+    outdir_path.push(album);
+    create_dir_all(outdir_path.clone()).unwrap();
+    Ok(outdir_path)
+}
+
 #[cfg(test)]
 mod tests {
     use id3::{Tag,TagLike};
+    use tempfile::tempdir;
 
     use super::*;
 
@@ -102,5 +112,24 @@ mod tests {
         tag.set_artist(dummy_artist);
         let result = check_tag_info(&tag).unwrap_err();
         assert_eq!(result.to_string(), "Missing field: album");
+    }
+
+    #[test]
+    fn correct_dir_created_for_song() {
+        let outdir = tempdir().unwrap();
+        let artist = "Dummy Artist";
+        let album = "Dummy Album";
+        let res = create_song_dir(&outdir, &artist, &album).unwrap();
+        let mut outdir_path = outdir.as_ref().to_path_buf();
+        outdir_path.push(artist);
+        outdir_path.push(album);
+        let was_correct_dir_created = outdir_path.try_exists().unwrap();
+        assert_eq!(
+            was_correct_dir_created,
+            true,
+            "Expected dir: {:?}. Created dir: {:?}",
+            outdir_path,
+            res,
+        );
     }
 }
