@@ -60,19 +60,20 @@ fn create_song_dir(outdir: &impl AsRef<Path>,  artist: &str, album: &str) -> Res
 
 fn move_song_file(filepath: &PathBuf, song_info: &SongInfo, outdir: &PathBuf) -> std::io::Result<()> {
     let mut outdir_path = outdir.clone();
+    let mut filename = String::new();
     outdir_path.push(song_info.artist);
     outdir_path.push(song_info.album);
     match song_info.title {
         None => {
-            let filename = filepath.as_path().file_name().unwrap().to_str().unwrap();
-            outdir_path.push(filename);
-            rename(filepath, outdir_path)
+            filename.push_str(filepath.as_path().file_name().unwrap().to_str().unwrap());
         },
         Some(title) => {
-            outdir_path.push(format!("{}.mp3", title));
-            rename(filepath, outdir_path)
+            filename.push_str(title);
+            filename.push_str(".mp3");
         }
     }
+    outdir_path.push(filename);
+    rename(filepath, outdir_path)
 }
 
 #[cfg(test)]
