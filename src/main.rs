@@ -1,4 +1,4 @@
-use std::{fmt::Display, path::{Path, PathBuf}, fs::{create_dir_all, rename}, io::ErrorKind};
+use std::{fmt::Display, path::{Path, PathBuf}, fs::{create_dir_all, rename}};
 
 use id3::{Tag, TagLike};
 
@@ -49,7 +49,7 @@ fn check_tag_info(tag: &Tag) -> Result<SongInfo, MissingSongInfo> {
 }
 
 
-fn create_song_dir(outdir: &impl AsRef<Path>,  artist: &str, album: &str) -> Result<PathBuf, ErrorKind> {
+fn create_song_dir(outdir: &impl AsRef<Path>,  artist: &str, album: &str) -> std::io::Result<PathBuf> {
     let mut outdir_path = outdir.as_ref().to_path_buf();
     outdir_path.push(artist);
     outdir_path.push(album);
