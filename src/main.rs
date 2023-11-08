@@ -1,5 +1,6 @@
 use std::{fmt::Display, path::{Path, PathBuf}, fs::{create_dir_all, rename}};
 
+use glob::{Paths, PatternError, glob};
 use id3::{Tag, TagLike};
 
 #[derive(Debug)]
@@ -76,10 +77,16 @@ fn move_song_file(filepath: &PathBuf, song_info: &SongInfo, outdir: &PathBuf) ->
     rename(filepath, outdir_path)
 }
 
+fn find_song_files(dir: &PathBuf) -> Result<Paths, PatternError> {
+    let pattern = "*.mp3";
+    glob(dir.join(pattern).to_str().unwrap())
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs::File;
 
+    use glob::GlobResult;
     use id3::{Tag,TagLike};
     use tempfile::tempdir;
 
@@ -232,5 +239,44 @@ mod tests {
             "Expected filepath: {:?}",
             expected_new_filepath,
         )
+    }
+
+    #[test]
+    fn find_three_song_files_in_dir() {
+        // Setup input directory containing all MP3 files to be checked and moved
+        let indir = tempdir().unwrap();
+        let indir_path = indir.as_ref().to_path_buf();
+        // Create dummy song files and associated dummy tag info
+        let songs = ["AATV.mp3", "AKLO.mp3", "ALZH.mp3"];
+        let mut tag = Tag::new();
+        let album = "Some Album";
+        let artist = "Some Artist";
+        for (i, song) in songs.iter().enumerate() {
+            tag.set_title(format!("{} {}", "Song", i.to_string()));
+            tag.set_artist(artist);
+            tag.set_album(album);
+            File::create(indir_path.join(song)).unwrap();
+            tag.write_to_path(indir_path.join(song), id3::Version::Id3v24).unwrap();
+        }
+        // Create some unsupported audio files in the input dir too
+        let other_files = ["A.m4a", "B.mp4", "C.flac"];
+        for unsupported_song_file in other_files.iter() {
+            File::create(indir_path.join(unsupported_song_file)).unwrap();
+        }
+        // Call function to check for supported song files
+        let song_files: Vec<GlobResult> = find_song_files(&indir_path).unwrap().collect();
+        // Check that we got the three MP3 files and none of the other unsupported files
+        let supported_song_filepaths = songs.map(|song| indir_path.join(song));
+        assert_eq!(song_files.len(), 3);
+        for filepath in song_files {
+            let matched_song_filepath = filepath.unwrap();
+            assert_eq!(supported_song_filepaths.contains(&matched_song_filepath), true);
+        }
+        let unsupported_song_filepaths = other_files.map(|song| indir_path.join(song));
+        for filepath in unsupported_song_filepaths {
+            assert_eq!(
+                supported_song_filepaths.contains(&filepath), false
+            );
+        }
     }
 }
