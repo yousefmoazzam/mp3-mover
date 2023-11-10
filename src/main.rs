@@ -279,4 +279,18 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn find_no_song_files_in_dir() {
+        let indir = tempdir().unwrap();
+        let indir_path = indir.as_ref().to_path_buf();
+        // Create some unsupported files in the input dir
+        let files = ["A.jpg", "B.mp4", "C.txt"];
+        for filename in files.iter() {
+            File::create(indir_path.join(filename)).unwrap();
+        }
+        // Call function to check for supported files
+        let song_files: Vec<GlobResult> = find_song_files(&indir_path).unwrap().collect();
+        assert_eq!(song_files.is_empty(), true);
+    }
 }
