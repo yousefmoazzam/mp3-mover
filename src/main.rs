@@ -109,19 +109,25 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<bool
                 continue;
             }
         };
-        let tag_info = check_tag_info(&tag);
-        match tag_info {
-            Ok(song_info) => {
-                let created_dir = create_song_dir(
-                    &outdir, song_info.artist, song_info.album
-                ).unwrap();
-                let moved_song_file = move_song_file(
-                    &path, &song_info, &outdir.to_path_buf()
-                ).unwrap();
-            },
-            Err(e) => {
-                continue;
-            }
+        let _ = check_song_file_tag_info(&tag, &path, outdir);
+    }
+    Ok(true)
+}
+
+
+fn check_song_file_tag_info(tag: &Tag, file_path: &PathBuf, outdir: &Path) -> std::io::Result<bool> {
+    let tag_info = check_tag_info(tag);
+    match tag_info {
+        Ok(song_info) => {
+            let created_dir = create_song_dir(
+                &outdir, song_info.artist, song_info.album
+            ).unwrap();
+            let moved_song_file = move_song_file(
+                &file_path, &song_info, &outdir.to_path_buf()
+            ).unwrap();
+        },
+        Err(e) => {
+            println!("Song file {:?} has missing field {}", file_path, e.missing_field);
         }
     }
     Ok(true)
