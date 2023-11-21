@@ -21,7 +21,7 @@ impl Display for MissingSongInfo {
     }
 }
 
-fn check_tag_info(tag: &Tag) -> Result<SongInfo, MissingSongInfo> {
+fn check_tag_info(tag: &impl TagLike) -> Result<SongInfo, MissingSongInfo> {
     let title = tag.title();
 
     let artist = match tag.artist() {
@@ -115,7 +115,7 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<bool
 }
 
 
-fn check_song_file_tag_info(tag: &Tag, file_path: &PathBuf, outdir: &Path) -> std::io::Result<bool> {
+fn check_song_file_tag_info(tag: &impl TagLike, file_path: &PathBuf, outdir: &Path) -> std::io::Result<bool> {
     let tag_info = check_tag_info(tag);
     match tag_info {
         Ok(song_info) => {
