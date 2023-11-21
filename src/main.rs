@@ -1,4 +1,4 @@
-use std::{fmt::Display, path::{Path, PathBuf}, fs::{create_dir_all, rename, read_dir}};
+use std::{fmt::Display, path::{Path, PathBuf}, fs::{create_dir_all, rename, read_dir, DirEntry}};
 
 use glob::{Paths, PatternError, glob};
 use id3::{Tag, TagLike};
@@ -89,37 +89,44 @@ fn process_input_dir(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
         if !elem.path().is_dir() {
             continue;
         }
-        let song_file_paths = find_song_files(&elem.path()).unwrap();
-        for glob_res in song_file_paths {
-            let path = glob_res.unwrap();
-            let tag = match Tag::read_from_path(path.clone()) {
-                Ok(val) => val,
-                Err(_) => {
-                    println!(
-                        "The file {:?} has no tag, it has been left unmodified",
-                        path,
-                    );
-                    continue;
-                }
-            };
-            let tag_info = check_tag_info(&tag);
-            match tag_info {
-                Ok(song_info) => {
-                    let created_dir = create_song_dir(
-                        &outdir, song_info.artist, song_info.album
-                    ).unwrap();
-                    let moved_song_file = move_song_file(
-                        &path, &song_info, &outdir.to_path_buf()
-                    ).unwrap();
-                },
-                Err(e) => {
-                    continue;
-                }
+        let _ = check_song_files(&elem, outdir);
+    }
+    Ok(true)
+}
+
+
+fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<bool> {
+    let song_file_paths = find_song_files(&dir_entry.path()).unwrap();
+    for glob_res in song_file_paths {
+        let path = glob_res.unwrap();
+        let tag = match Tag::read_from_path(path.clone()) {
+            Ok(val) => val,
+            Err(_) => {
+                println!(
+                    "The file {:?} has no tag, it has been left unmodified",
+                    path,
+                );
+                continue;
+            }
+        };
+        let tag_info = check_tag_info(&tag);
+        match tag_info {
+            Ok(song_info) => {
+                let created_dir = create_song_dir(
+                    &outdir, song_info.artist, song_info.album
+                ).unwrap();
+                let moved_song_file = move_song_file(
+                    &path, &song_info, &outdir.to_path_buf()
+                ).unwrap();
+            },
+            Err(e) => {
+                continue;
             }
         }
     }
     Ok(true)
 }
+
 
 #[cfg(test)]
 mod tests {
