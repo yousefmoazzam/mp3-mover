@@ -50,12 +50,11 @@ fn check_tag_info(tag: &impl TagLike) -> Result<SongInfo, MissingSongInfo> {
 }
 
 
-fn create_song_dir(outdir: &impl AsRef<Path>,  artist: &str, album: &str) -> std::io::Result<PathBuf> {
+fn create_song_dir(outdir: &impl AsRef<Path>,  artist: &str, album: &str) -> std::io::Result<()> {
     let mut outdir_path = outdir.as_ref().to_path_buf();
     outdir_path.push(artist);
     outdir_path.push(album);
-    create_dir_all(outdir_path.clone()).unwrap();
-    Ok(outdir_path)
+    create_dir_all(outdir_path.clone())
 }
 
 
@@ -119,7 +118,7 @@ fn check_song_file_tag_info(tag: &impl TagLike, file_path: &PathBuf, outdir: &Pa
     let tag_info = check_tag_info(tag);
     match tag_info {
         Ok(song_info) => {
-            let created_dir = create_song_dir(
+            let _ = create_song_dir(
                 &outdir, song_info.artist, song_info.album
             ).unwrap();
             let moved_song_file = move_song_file(
@@ -199,18 +198,12 @@ mod tests {
         let outdir = tempdir().unwrap();
         let artist = "Dummy Artist";
         let album = "Dummy Album";
-        let res = create_song_dir(&outdir, &artist, &album).unwrap();
+        let _ = create_song_dir(&outdir, &artist, &album).unwrap();
         let mut outdir_path = outdir.as_ref().to_path_buf();
         outdir_path.push(artist);
         outdir_path.push(album);
         let was_correct_dir_created = outdir_path.try_exists().unwrap();
-        assert_eq!(
-            was_correct_dir_created,
-            true,
-            "Expected dir: {:?}. Created dir: {:?}",
-            outdir_path,
-            res,
-        );
+        assert_eq!(was_correct_dir_created, true);
     }
 
     #[test]
