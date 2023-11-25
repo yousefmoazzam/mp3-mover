@@ -1,4 +1,6 @@
-use std::{fmt::Display, path::{Path, PathBuf}, fs::{create_dir_all, rename, read_dir, DirEntry}};
+use std::fmt::Display;
+use std::path::{Path, PathBuf};
+use std::fs::{create_dir_all, rename, read_dir, DirEntry};
 
 use glob::{Paths, PatternError, glob};
 use id3::{Tag, TagLike};
