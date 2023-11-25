@@ -1,8 +1,9 @@
 mod helpers{
     use std::path::{Path, PathBuf};
     use std::fs::{File, create_dir};
-    use id3::{Tag, TagLike};
     use std::iter::zip;
+
+    use id3::{Tag, TagLike};
 
     pub fn create_dir_with_song_files(
         dir_name: &str,
