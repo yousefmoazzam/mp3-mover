@@ -41,7 +41,7 @@ mod tests{
 
     use crate::helpers::create_dir_with_song_files;
 
-    use mp3_mover::process_input_dir;
+    use mp3_mover::run;
 
     #[test]
     fn find_song_files_in_two_dirs() {
@@ -87,7 +87,7 @@ mod tests{
 
         // Run function to search through all subdirs in input dir and rename+move song files into
         // the output dir
-        let res = process_input_dir(indir.as_ref(), outdir.as_ref());
+        let res = run(indir.as_ref(), outdir.as_ref());
 
         // Check output dir has expected subdirs
         let read_iter = read_dir(outdir.path()).unwrap();

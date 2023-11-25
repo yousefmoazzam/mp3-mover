@@ -82,7 +82,7 @@ fn find_song_files(dir: &PathBuf) -> Result<Paths, PatternError> {
     glob(dir.join(pattern).to_str().unwrap())
 }
 
-pub fn process_input_dir(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
+pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
     let contents = read_dir(indir).unwrap();
     for child in contents {
         let elem = child.unwrap();
