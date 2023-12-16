@@ -1,7 +1,7 @@
 fn main(){}
 
 mod helpers {
-    use std::{path::PathBuf, fs::read_dir};
+    use std::{path::PathBuf, fs::{read_dir, create_dir_all}};
 
     pub fn check_number_of_args(args: &impl ExactSizeIterator) -> bool {
         args.len() == 2
@@ -25,6 +25,22 @@ mod helpers {
 
         true
     }
+
+    pub fn is_output_dir_arg_valid(arg: &str) -> bool {
+        let output_path = PathBuf::from(arg);
+
+        if !output_path.exists() {
+            return match create_dir_all(output_path) {
+                Ok(_) => true,
+                Err(e) => {
+                    println!("Error when trying to create output dir: {:?}", e);
+                    false
+                },
+            };
+        }
+
+        true
+    }
 }
 
 #[cfg(test)]
@@ -33,7 +49,7 @@ mod tests {
 
     use tempfile::tempdir;
 
-    use crate::helpers::{check_number_of_args, is_input_dir_arg_valid};
+    use crate::helpers::{check_number_of_args, is_input_dir_arg_valid, is_output_dir_arg_valid};
 
     #[test]
     fn not_enough_cli_args() {
@@ -74,5 +90,16 @@ mod tests {
         let indir_str = indir.as_ref().to_str().unwrap();
         let is_valid = is_input_dir_arg_valid(indir_str);
         assert_eq!(is_valid, false);
+    }
+
+    #[test]
+    fn output_dir_arg_doesnt_exist_but_can_create() {
+        let outdir = tempdir().unwrap();
+        let subdir = "subdir";
+        let outdir_path = outdir.as_ref().join(subdir);
+        let outdir_str = outdir_path.to_str().unwrap();
+        let is_valid = is_output_dir_arg_valid(outdir_str);
+        assert_eq!(is_valid, true);
+        assert_eq!(outdir_path.exists(), true);
     }
 }
