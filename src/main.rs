@@ -7,13 +7,27 @@ mod helpers {
         args.len() == 2
     }
 
-    pub fn is_input_dir_arg_valid(input_dir: &str) -> bool {
-        PathBuf::from(input_dir).exists()
+    pub fn is_input_dir_arg_valid(input: &str) -> bool {
+        let input_path = PathBuf::from(input);
+
+        if !input_path.exists() {
+            return false
+        }
+
+        if !input_path.is_dir() {
+            return false
+        }
+
+        true
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::fs::File;
+
+    use tempfile::tempdir;
+
     use crate::helpers::{check_number_of_args, is_input_dir_arg_valid};
 
     #[test]
@@ -37,5 +51,15 @@ mod tests {
        let nonexistent_path = "/tmp/nonexistent-dir";
        let is_valid = is_input_dir_arg_valid(&nonexistent_path);
        assert_eq!(is_valid, false);
+    }
+
+    #[test]
+    fn input_dir_arg_isnt_a_dir() {
+        let indir = tempdir().unwrap();
+        let indir_path = indir.as_ref().to_path_buf();
+        let file_not_dir_path = indir_path.join("blah.txt");
+        File::create(file_not_dir_path.clone()).unwrap();
+        let is_valid = is_input_dir_arg_valid(&file_not_dir_path.to_str().unwrap());
+        assert_eq!(is_valid, false);
     }
 }
