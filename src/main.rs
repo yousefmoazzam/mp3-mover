@@ -1,7 +1,7 @@
 fn main(){}
 
 mod helpers {
-    use std::path::PathBuf;
+    use std::{path::PathBuf, fs::read_dir};
 
     pub fn check_number_of_args(args: &impl ExactSizeIterator) -> bool {
         args.len() == 2
@@ -15,6 +15,11 @@ mod helpers {
         }
 
         if !input_path.is_dir() {
+            return false
+        }
+
+        let contents = read_dir(input_path).unwrap();
+        if contents.count() == 0 {
             return false
         }
 
@@ -60,6 +65,14 @@ mod tests {
         let file_not_dir_path = indir_path.join("blah.txt");
         File::create(file_not_dir_path.clone()).unwrap();
         let is_valid = is_input_dir_arg_valid(&file_not_dir_path.to_str().unwrap());
+        assert_eq!(is_valid, false);
+    }
+
+    #[test]
+    fn input_dir_arg_is_empty() {
+        let indir = tempdir().unwrap();
+        let indir_str = indir.as_ref().to_str().unwrap();
+        let is_valid = is_input_dir_arg_valid(indir_str);
         assert_eq!(is_valid, false);
     }
 }
