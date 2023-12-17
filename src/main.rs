@@ -1,4 +1,5 @@
-use std::{path::PathBuf, fs::read_dir};
+use std::path::PathBuf;
+use std::fs::{read_dir, create_dir_all};
 
 fn main(){}
 
@@ -36,12 +37,8 @@ impl Config {
 
         true
     }
-}
 
-mod helpers {
-    use std::{path::PathBuf, fs::create_dir_all};
-
-    pub fn is_output_dir_arg_valid(arg: &str) -> bool {
+    fn validate_output_dir_arg(arg: &str) -> bool {
         let output_path = PathBuf::from(arg);
 
         if !output_path.exists() {
@@ -65,7 +62,6 @@ mod tests {
     use tempfile::tempdir;
 
     use crate::Config;
-    use crate::helpers::is_output_dir_arg_valid;
 
     #[test]
     fn not_enough_cli_args() {
@@ -121,7 +117,7 @@ mod tests {
         let subdir = "subdir";
         let outdir_path = outdir.as_ref().join(subdir);
         let outdir_str = outdir_path.to_str().unwrap();
-        let is_valid = is_output_dir_arg_valid(outdir_str);
+        let is_valid = Config::validate_output_dir_arg(outdir_str);
         assert_eq!(is_valid, true);
         assert_eq!(outdir_path.exists(), true);
     }
