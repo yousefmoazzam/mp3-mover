@@ -1,9 +1,14 @@
 fn main(){}
 
-fn parse_args(args: &[String]) -> (&str, &str) {
-    let input_path = &args[1];
-    let output_path = &args[2];
-    (input_path, output_path)
+struct Config {
+    input_path: String,
+    output_path: String,
+}
+
+fn parse_args(args: &[String]) -> Config {
+    let input_path = args[1].clone();
+    let output_path = args[2].clone();
+    Config { input_path, output_path }
 }
 
 mod helpers {
@@ -120,8 +125,8 @@ mod tests {
             input_path.to_string(),
             output_path.to_string(),
         ];
-        let args = parse_args(&dummy_args);
-        assert_eq!(args.0, input_path);
-        assert_eq!(args.1, output_path);
+        let config = parse_args(&dummy_args);
+        assert_eq!(config.input_path, input_path);
+        assert_eq!(config.output_path, output_path);
     }
 }
