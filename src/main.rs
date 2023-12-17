@@ -5,10 +5,12 @@ struct Config {
     output_path: String,
 }
 
-fn parse_args(args: &[String]) -> Config {
-    let input_path = args[1].clone();
-    let output_path = args[2].clone();
-    Config { input_path, output_path }
+impl Config {
+    fn new(args: &[String]) -> Config {
+        let input_path = args[1].clone();
+        let output_path = args[2].clone();
+        Config { input_path, output_path }
+    }
 }
 
 mod helpers {
@@ -60,7 +62,7 @@ mod tests {
 
     use tempfile::tempdir;
 
-    use crate::parse_args;
+    use crate::Config;
     use crate::helpers::{check_number_of_args, is_input_dir_arg_valid, is_output_dir_arg_valid};
 
     #[test]
@@ -116,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn arg_parser_returns_correct_args() {
+    fn config_instance_has_correct_args() {
         let program_name = "/path/to/program";
         let input_path = "/path/to/input";
         let output_path = "/path/to/output";
@@ -125,7 +127,7 @@ mod tests {
             input_path.to_string(),
             output_path.to_string(),
         ];
-        let config = parse_args(&dummy_args);
+        let config = Config::new(&dummy_args);
         assert_eq!(config.input_path, input_path);
         assert_eq!(config.output_path, output_path);
     }
