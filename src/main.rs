@@ -1,3 +1,5 @@
+use std::{path::PathBuf, fs::read_dir};
+
 fn main(){}
 
 struct Config {
@@ -15,13 +17,8 @@ impl Config {
     fn validate_number_of_args(args: &impl ExactSizeIterator) -> bool {
         args.len() == 3
     }
-}
 
-mod helpers {
-    use std::{path::PathBuf, fs::{read_dir, create_dir_all}};
-
-
-    pub fn is_input_dir_arg_valid(input: &str) -> bool {
+    fn validate_input_dir_arg(input: &str) -> bool {
         let input_path = PathBuf::from(input);
 
         if !input_path.exists() {
@@ -39,6 +36,10 @@ mod helpers {
 
         true
     }
+}
+
+mod helpers {
+    use std::{path::PathBuf, fs::create_dir_all};
 
     pub fn is_output_dir_arg_valid(arg: &str) -> bool {
         let output_path = PathBuf::from(arg);
@@ -64,7 +65,7 @@ mod tests {
     use tempfile::tempdir;
 
     use crate::Config;
-    use crate::helpers::{is_input_dir_arg_valid, is_output_dir_arg_valid};
+    use crate::helpers::is_output_dir_arg_valid;
 
     #[test]
     fn not_enough_cli_args() {
@@ -90,7 +91,7 @@ mod tests {
     #[test]
     fn input_dir_arg_doesnt_exist() {
        let nonexistent_path = "/tmp/nonexistent-dir";
-       let is_valid = is_input_dir_arg_valid(&nonexistent_path);
+       let is_valid = Config::validate_input_dir_arg(&nonexistent_path);
        assert_eq!(is_valid, false);
     }
 
@@ -100,7 +101,9 @@ mod tests {
         let indir_path = indir.as_ref().to_path_buf();
         let file_not_dir_path = indir_path.join("blah.txt");
         File::create(file_not_dir_path.clone()).unwrap();
-        let is_valid = is_input_dir_arg_valid(&file_not_dir_path.to_str().unwrap());
+        let is_valid = Config::validate_input_dir_arg(
+            &file_not_dir_path.to_str().unwrap()
+        );
         assert_eq!(is_valid, false);
     }
 
@@ -108,7 +111,7 @@ mod tests {
     fn input_dir_arg_is_empty() {
         let indir = tempdir().unwrap();
         let indir_str = indir.as_ref().to_str().unwrap();
-        let is_valid = is_input_dir_arg_valid(indir_str);
+        let is_valid = Config::validate_input_dir_arg(indir_str);
         assert_eq!(is_valid, false);
     }
 
