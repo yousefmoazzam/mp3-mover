@@ -11,14 +11,15 @@ impl Config {
         let output_path = args[2].clone();
         Config { input_path, output_path }
     }
+
+    fn validate_number_of_args(args: &impl ExactSizeIterator) -> bool {
+        args.len() == 3
+    }
 }
 
 mod helpers {
     use std::{path::PathBuf, fs::{read_dir, create_dir_all}};
 
-    pub fn check_number_of_args(args: &impl ExactSizeIterator) -> bool {
-        args.len() == 3
-    }
 
     pub fn is_input_dir_arg_valid(input: &str) -> bool {
         let input_path = PathBuf::from(input);
@@ -63,13 +64,13 @@ mod tests {
     use tempfile::tempdir;
 
     use crate::Config;
-    use crate::helpers::{check_number_of_args, is_input_dir_arg_valid, is_output_dir_arg_valid};
+    use crate::helpers::{is_input_dir_arg_valid, is_output_dir_arg_valid};
 
     #[test]
     fn not_enough_cli_args() {
         let dummy_args = ["/path/to/progam".to_string()];
         let iter = dummy_args.iter();
-        let is_correct_no_of_args = check_number_of_args(&iter);
+        let is_correct_no_of_args = Config::validate_number_of_args(&iter);
         assert_eq!(is_correct_no_of_args, false);
     }
 
@@ -82,7 +83,7 @@ mod tests {
             "extra arg"
         ];
         let dummy_args = dummy_args.map(|s| s.to_string());
-        let is_correct_no_of_args = check_number_of_args(&dummy_args.iter());
+        let is_correct_no_of_args = Config::validate_number_of_args(&dummy_args.iter());
         assert_eq!(is_correct_no_of_args, false);
     }
 
