@@ -1,5 +1,11 @@
 fn main(){}
 
+fn parse_args(args: &[String]) -> (&str, &str) {
+    let input_path = &args[1];
+    let output_path = &args[2];
+    (input_path, output_path)
+}
+
 mod helpers {
     use std::{path::PathBuf, fs::{read_dir, create_dir_all}};
 
@@ -49,6 +55,7 @@ mod tests {
 
     use tempfile::tempdir;
 
+    use crate::parse_args;
     use crate::helpers::{check_number_of_args, is_input_dir_arg_valid, is_output_dir_arg_valid};
 
     #[test]
@@ -101,5 +108,20 @@ mod tests {
         let is_valid = is_output_dir_arg_valid(outdir_str);
         assert_eq!(is_valid, true);
         assert_eq!(outdir_path.exists(), true);
+    }
+
+    #[test]
+    fn arg_parser_returns_correct_args() {
+        let program_name = "/path/to/program";
+        let input_path = "/path/to/input";
+        let output_path = "/path/to/output";
+        let dummy_args = vec![
+            program_name.to_string(),
+            input_path.to_string(),
+            output_path.to_string(),
+        ];
+        let args = parse_args(&dummy_args);
+        assert_eq!(args.0, input_path);
+        assert_eq!(args.1, output_path);
     }
 }
