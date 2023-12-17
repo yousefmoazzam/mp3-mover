@@ -17,7 +17,7 @@ mod helpers {
     use std::{path::PathBuf, fs::{read_dir, create_dir_all}};
 
     pub fn check_number_of_args(args: &impl ExactSizeIterator) -> bool {
-        args.len() == 2
+        args.len() == 3
     }
 
     pub fn is_input_dir_arg_valid(input: &str) -> bool {
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn not_enough_cli_args() {
-        let dummy_args = ["/path/to/some/dir".to_string()];
+        let dummy_args = ["/path/to/progam".to_string()];
         let iter = dummy_args.iter();
         let is_correct_no_of_args = check_number_of_args(&iter);
         assert_eq!(is_correct_no_of_args, false);
@@ -75,7 +75,12 @@ mod tests {
 
     #[test]
     fn too_many_cli_args() {
-        let dummy_args = ["/input/dir/path", "/ouput/dir/path", "extra arg"];
+        let dummy_args = [
+            "/path/to/program",
+            "/input/dir/path",
+            "/ouput/dir/path",
+            "extra arg"
+        ];
         let dummy_args = dummy_args.map(|s| s.to_string());
         let is_correct_no_of_args = check_number_of_args(&dummy_args.iter());
         assert_eq!(is_correct_no_of_args, false);
