@@ -22,23 +22,23 @@ impl Config {
         Ok(())
     }
 
-    fn validate_input_dir_arg(input: &str) -> bool {
+    fn validate_input_dir_arg(input: &str) -> Result<(), &str> {
         let input_path = PathBuf::from(input);
 
         if !input_path.exists() {
-            return false
+            return Err("Input directory arg doesn't exist")
         }
 
         if !input_path.is_dir() {
-            return false
+            return Err("Input directory arg isn't a directory")
         }
 
         let contents = read_dir(input_path).unwrap();
         if contents.count() == 0 {
-            return false
+            return Err("Input directory arg contains no subdirectories")
         }
 
-        true
+        Ok(())
     }
 
     fn validate_output_dir_arg(arg: &str) -> bool {
@@ -98,9 +98,13 @@ mod tests {
 
     #[test]
     fn input_dir_arg_doesnt_exist() {
-       let nonexistent_path = "/tmp/nonexistent-dir";
-       let is_valid = Config::validate_input_dir_arg(&nonexistent_path);
-       assert_eq!(is_valid, false);
+        let nonexistent_path = "/tmp/nonexistent-dir";
+        let res = Config::validate_input_dir_arg(&nonexistent_path);
+        let expected_error_message = "Input directory arg doesn't exist";
+        assert_eq!(
+            res.is_err_and(|e| e.to_string() == expected_error_message),
+            true,
+        );
     }
 
     #[test]
@@ -109,18 +113,26 @@ mod tests {
         let indir_path = indir.as_ref().to_path_buf();
         let file_not_dir_path = indir_path.join("blah.txt");
         File::create(file_not_dir_path.clone()).unwrap();
-        let is_valid = Config::validate_input_dir_arg(
+        let res = Config::validate_input_dir_arg(
             &file_not_dir_path.to_str().unwrap()
         );
-        assert_eq!(is_valid, false);
+        let expected_error_message = "Input directory arg isn't a directory";
+        assert_eq!(
+            res.is_err_and(|e| e.to_string() == expected_error_message),
+            true,
+        );
     }
 
     #[test]
     fn input_dir_arg_is_empty() {
         let indir = tempdir().unwrap();
         let indir_str = indir.as_ref().to_str().unwrap();
-        let is_valid = Config::validate_input_dir_arg(indir_str);
-        assert_eq!(is_valid, false);
+        let res = Config::validate_input_dir_arg(indir_str);
+        let expected_error_message = "Input directory arg contains no subdirectories";
+        assert_eq!(
+            res.is_err_and(|e| e.to_string() == expected_error_message),
+            true,
+        );
     }
 
     #[test]
