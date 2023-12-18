@@ -15,8 +15,11 @@ impl Config {
         Config { input_path, output_path }
     }
 
-    fn validate_number_of_args(args: &impl ExactSizeIterator) -> bool {
-        args.len() == 3
+    fn validate_number_of_args(args: &impl ExactSizeIterator) -> Result<(), &str> {
+        if args.len() != 3 {
+            return Err("Invalid number of args given")
+        }
+        Ok(())
     }
 
     fn validate_input_dir_arg(input: &str) -> bool {
@@ -67,8 +70,12 @@ mod tests {
     fn not_enough_cli_args() {
         let dummy_args = ["/path/to/progam".to_string()];
         let iter = dummy_args.iter();
-        let is_correct_no_of_args = Config::validate_number_of_args(&iter);
-        assert_eq!(is_correct_no_of_args, false);
+        let res = Config::validate_number_of_args(&iter);
+        let expected_error_message = "Invalid number of args given";
+        assert_eq!(
+            res.is_err_and(|e| e.to_string() == expected_error_message),
+            true,
+        );
     }
 
     #[test]
@@ -80,8 +87,13 @@ mod tests {
             "extra arg"
         ];
         let dummy_args = dummy_args.map(|s| s.to_string());
-        let is_correct_no_of_args = Config::validate_number_of_args(&dummy_args.iter());
-        assert_eq!(is_correct_no_of_args, false);
+        let iter = dummy_args.iter();
+        let res = Config::validate_number_of_args(&iter);
+        let expected_error_message = "Invalid number of args given";
+        assert_eq!(
+            res.is_err_and(|e| e.to_string() == expected_error_message),
+            true,
+        );
     }
 
     #[test]
