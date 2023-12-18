@@ -1,3 +1,4 @@
+use std::io;
 use std::path::PathBuf;
 use std::fs::{read_dir, create_dir_all};
 
@@ -41,20 +42,14 @@ impl Config {
         Ok(())
     }
 
-    fn validate_output_dir_arg(arg: &str) -> bool {
+    fn validate_output_dir_arg(arg: &str) -> Result<(), io::Error> {
         let output_path = PathBuf::from(arg);
 
         if !output_path.exists() {
-            return match create_dir_all(output_path) {
-                Ok(_) => true,
-                Err(e) => {
-                    println!("Error when trying to create output dir: {:?}", e);
-                    false
-                },
-            };
+            create_dir_all(output_path)?;
         }
 
-        true
+        Ok(())
     }
 }
 
@@ -141,8 +136,8 @@ mod tests {
         let subdir = "subdir";
         let outdir_path = outdir.as_ref().join(subdir);
         let outdir_str = outdir_path.to_str().unwrap();
-        let is_valid = Config::validate_output_dir_arg(outdir_str);
-        assert_eq!(is_valid, true);
+        let res = Config::validate_output_dir_arg(outdir_str);
+        assert_eq!(res.is_ok(), true);
         assert_eq!(outdir_path.exists(), true);
     }
 
