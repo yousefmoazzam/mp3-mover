@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::io;
 use std::path::PathBuf;
 use std::fs::{read_dir, create_dir_all};
@@ -10,13 +11,16 @@ struct Config {
 }
 
 impl Config {
-    fn new(args: &[String]) -> Config {
+    fn new(args: &[String]) -> Result<Config, Box<dyn Error>> {
+        Config::validate_number_of_args(&args)?;
+        Config::validate_input_dir_arg(&args[1])?;
+        Config::validate_output_dir_arg(&args[2])?;
         let input_path = args[1].clone();
         let output_path = args[2].clone();
-        Config { input_path, output_path }
+        Ok(Config { input_path, output_path })
     }
 
-    fn validate_number_of_args(args: &impl ExactSizeIterator) -> Result<(), &str> {
+    fn validate_number_of_args(args: &[String]) -> Result<(), &str> {
         if args.len() != 3 {
             return Err("Invalid number of args given")
         }
@@ -55,7 +59,7 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
+    use std::fs::{File, create_dir};
 
     use tempfile::tempdir;
 
@@ -64,8 +68,7 @@ mod tests {
     #[test]
     fn not_enough_cli_args() {
         let dummy_args = ["/path/to/progam".to_string()];
-        let iter = dummy_args.iter();
-        let res = Config::validate_number_of_args(&iter);
+        let res = Config::validate_number_of_args(&dummy_args);
         let expected_error_message = "Invalid number of args given";
         assert_eq!(
             res.is_err_and(|e| e.to_string() == expected_error_message),
@@ -82,8 +85,7 @@ mod tests {
             "extra arg"
         ];
         let dummy_args = dummy_args.map(|s| s.to_string());
-        let iter = dummy_args.iter();
-        let res = Config::validate_number_of_args(&iter);
+        let res = Config::validate_number_of_args(&dummy_args);
         let expected_error_message = "Invalid number of args given";
         assert_eq!(
             res.is_err_and(|e| e.to_string() == expected_error_message),
@@ -144,14 +146,21 @@ mod tests {
     #[test]
     fn config_instance_has_correct_args() {
         let program_name = "/path/to/program";
-        let input_path = "/path/to/input";
-        let output_path = "/path/to/output";
+        // Create valid input dir
+        let input_dir = tempdir().unwrap();
+        let input_path = input_dir.path().to_str().unwrap().to_string();
+        let subdir = "subdir";
+        let input_subdir = input_dir.into_path().join(subdir);
+        create_dir(input_subdir).unwrap();
+        // Create valid output dir
+        let output_dir = tempdir().unwrap();
+        let output_path = output_dir.path().to_str().unwrap().to_string();
         let dummy_args = vec![
             program_name.to_string(),
             input_path.to_string(),
             output_path.to_string(),
         ];
-        let config = Config::new(&dummy_args);
+        let config = Config::new(&dummy_args).unwrap();
         assert_eq!(config.input_path, input_path);
         assert_eq!(config.output_path, output_path);
     }
