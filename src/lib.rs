@@ -98,7 +98,7 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
 }
 
 
-fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<bool> {
+fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> {
     let song_file_paths = find_song_files(&dir_entry.path()).unwrap();
     for glob_res in song_file_paths {
         let path = match glob_res {
@@ -120,7 +120,7 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<bool
         };
         let _ = check_song_file_tag_info(&tag, &path, outdir);
     }
-    Ok(true)
+    Ok(())
 }
 
 
