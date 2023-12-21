@@ -118,7 +118,7 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> 
                 continue;
             }
         };
-        let _ = check_song_file_tag_info(&tag, &path, outdir);
+        check_song_file_tag_info(&tag, &path, outdir)?;
     }
     Ok(())
 }
