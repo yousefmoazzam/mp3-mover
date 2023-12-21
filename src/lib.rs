@@ -122,12 +122,8 @@ fn check_song_file_tag_info(tag: &impl TagLike, file_path: &PathBuf, outdir: &Pa
     let tag_info = check_tag_info(tag);
     match tag_info {
         Ok(song_info) => {
-            let _ = create_song_dir(
-                &outdir, song_info.artist, song_info.album
-            ).unwrap();
-            let moved_song_file = move_song_file(
-                &file_path, &song_info, &outdir.to_path_buf()
-            ).unwrap();
+            create_song_dir(&outdir, song_info.artist, song_info.album)?;
+            move_song_file(&file_path, &song_info, &outdir.to_path_buf())?;
         },
         Err(e) => {
             println!("Song file {:?} has missing field {}", file_path, e.missing_field);
