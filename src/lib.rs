@@ -101,7 +101,13 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
 fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<bool> {
     let song_file_paths = find_song_files(&dir_entry.path()).unwrap();
     for glob_res in song_file_paths {
-        let path = glob_res.unwrap();
+        let path = match glob_res {
+            Ok(val) => val,
+            Err(e) => {
+                println!("Found a glob error {:?}, ignoring and moving onto next match", e);
+                continue;
+            }
+        };
         let tag = match Tag::read_from_path(path.clone()) {
             Ok(val) => val,
             Err(_) => {
