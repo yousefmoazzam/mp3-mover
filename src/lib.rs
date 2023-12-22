@@ -85,7 +85,7 @@ fn find_song_files(dir: &PathBuf) -> Paths {
         .expect("Glob pattern is hardcoded so should not be an invalid pattern")
 }
 
-pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
+pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<()> {
     let contents = read_dir(indir)?;
     for child in contents {
         let elem = match child {
@@ -100,7 +100,7 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
         }
         check_song_files(&elem, outdir)?;
     }
-    Ok(true)
+    Ok(())
 }
 
 
