@@ -98,7 +98,7 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
         if !elem.path().is_dir() {
             continue;
         }
-        let _ = check_song_files(&elem, outdir);
+        check_song_files(&elem, outdir)?;
     }
     Ok(true)
 }
