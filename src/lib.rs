@@ -87,8 +87,13 @@ fn find_song_files(dir: &PathBuf) -> Result<Paths, PatternError> {
 pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
     let contents = read_dir(indir)?;
     for child in contents {
-        let elem = child.unwrap();
-        println!("Child in indir is {:?}", elem.path());
+        let elem = match child {
+            Ok(val) => val,
+            Err(e) => {
+                println!("During input dir contents reading encountered error {:?}; moving on", e);
+                continue;
+            }
+        };
         if !elem.path().is_dir() {
             continue;
         }
