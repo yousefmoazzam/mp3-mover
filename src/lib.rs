@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::fs::{create_dir_all, rename, read_dir, DirEntry};
 
-use glob::{Paths, PatternError, glob};
+use glob::{Paths, glob};
 use id3::{Tag, TagLike};
 
 #[derive(Debug)]
@@ -79,9 +79,10 @@ fn move_song_file(filepath: &PathBuf, song_info: &SongInfo, outdir: &PathBuf) ->
     rename(filepath, outdir_path)
 }
 
-fn find_song_files(dir: &PathBuf) -> Result<Paths, PatternError> {
+fn find_song_files(dir: &PathBuf) -> Paths {
     let pattern = "*.mp3";
     glob(dir.join(pattern).to_str().unwrap())
+        .expect("Glob pattern is hardcoded so should not be an invalid pattern")
 }
 
 pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
@@ -104,7 +105,7 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<bool> {
 
 
 fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> {
-    let song_file_paths = find_song_files(&dir_entry.path()).unwrap();
+    let song_file_paths = find_song_files(&dir_entry.path());
     for glob_res in song_file_paths {
         let path = match glob_res {
             Ok(val) => val,
@@ -320,7 +321,7 @@ mod tests {
             File::create(indir_path.join(unsupported_song_file)).unwrap();
         }
         // Call function to check for supported song files
-        let song_files: Vec<GlobResult> = find_song_files(&indir_path).unwrap().collect();
+        let song_files: Vec<GlobResult> = find_song_files(&indir_path).collect();
         // Check that we got the three MP3 files and none of the other unsupported files
         let supported_song_filepaths = songs.map(|song| indir_path.join(song));
         assert_eq!(song_files.len(), 3);
@@ -346,7 +347,7 @@ mod tests {
             File::create(indir_path.join(filename)).unwrap();
         }
         // Call function to check for supported files
-        let song_files: Vec<GlobResult> = find_song_files(&indir_path).unwrap().collect();
+        let song_files: Vec<GlobResult> = find_song_files(&indir_path).collect();
         assert_eq!(song_files.is_empty(), true);
     }
 }
