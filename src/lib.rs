@@ -79,10 +79,12 @@ fn move_song_file(filepath: &PathBuf, song_info: &SongInfo, outdir: &PathBuf) ->
     rename(filepath, outdir_path)
 }
 
-fn find_song_files(dir: &PathBuf) -> Paths {
+fn find_song_files(dir: &PathBuf) -> Option<Paths> {
     let pattern = "*.mp3";
-    glob(dir.join(pattern).to_str().unwrap())
-        .expect("Glob pattern is hardcoded so should not be an invalid pattern")
+    let full_pattern = dir.join(pattern);
+    let glob_str = full_pattern.to_str()?;
+    Some(glob(glob_str)
+        .expect("Glob pattern is hardcoded so should not be an invalid pattern"))
 }
 
 pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<()> {
@@ -105,7 +107,17 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<()> {
 
 
 fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> {
-    let song_file_paths = find_song_files(&dir_entry.path());
+    let song_file_paths = match find_song_files(&dir_entry.path()) {
+        Some(val) => val,
+        None => {
+            println!(
+                "Found invalid unicode in glob string for dir: {:?}; ignoring an moving on",
+                dir_entry.path()
+            );
+            return Ok(())
+        }
+    };
+
     for glob_res in song_file_paths {
         let path = match glob_res {
             Ok(val) => val,
@@ -321,7 +333,7 @@ mod tests {
             File::create(indir_path.join(unsupported_song_file)).unwrap();
         }
         // Call function to check for supported song files
-        let song_files: Vec<GlobResult> = find_song_files(&indir_path).collect();
+        let song_files: Vec<GlobResult> = find_song_files(&indir_path).unwrap().collect();
         // Check that we got the three MP3 files and none of the other unsupported files
         let supported_song_filepaths = songs.map(|song| indir_path.join(song));
         assert_eq!(song_files.len(), 3);
@@ -347,7 +359,7 @@ mod tests {
             File::create(indir_path.join(filename)).unwrap();
         }
         // Call function to check for supported files
-        let song_files: Vec<GlobResult> = find_song_files(&indir_path).collect();
+        let song_files: Vec<GlobResult> = find_song_files(&indir_path).unwrap().collect();
         assert_eq!(song_files.is_empty(), true);
     }
 }
