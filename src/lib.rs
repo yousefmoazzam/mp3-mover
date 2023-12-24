@@ -67,7 +67,9 @@ fn move_song_file(filepath: &PathBuf, song_info: &SongInfo, outdir: &PathBuf) ->
     outdir_path.push(song_info.album);
     match song_info.title {
         None => {
-            filename.push_str(filepath.as_path().file_name().unwrap().to_str().unwrap());
+            let original_filename = filepath.as_path().file_name()
+                .expect("Audio file path from globbing shouldn't return a directory");
+            filename.push_str(original_filename.to_str().unwrap());
         },
         Some(title) => {
             filename.push_str(title);
