@@ -4,6 +4,7 @@ use std::fs::{create_dir_all, rename, read_dir, DirEntry};
 
 use glob::{Paths, glob};
 use id3::{Tag, TagLike};
+use log::{info, warn};
 
 #[derive(Debug)]
 struct SongInfo<'a> {
@@ -78,7 +79,7 @@ fn move_song_file(filepath: &PathBuf, song_info: &SongInfo, outdir: &PathBuf) ->
         }
     }
     outdir_path.push(filename);
-    println!("Renaming to {:?}", outdir_path);
+    info!("Renaming {:?} to {:?}", filepath, outdir_path);
     rename(filepath, outdir_path)
 }
 
@@ -96,7 +97,7 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<()> {
         let elem = match child {
             Ok(val) => val,
             Err(e) => {
-                println!("During input dir contents reading encountered error {:?}; moving on", e);
+                warn!("During input dir contents reading encountered error {:?}; moving on", e);
                 continue;
             }
         };
@@ -113,7 +114,7 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> 
     let song_file_paths = match find_song_files(&dir_entry.path()) {
         Some(val) => val,
         None => {
-            println!(
+            warn!(
                 "Found invalid unicode in glob string for dir: {:?}; ignoring an moving on",
                 dir_entry.path()
             );
@@ -125,14 +126,14 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> 
         let path = match glob_res {
             Ok(val) => val,
             Err(e) => {
-                println!("Found a glob error {:?}, ignoring and moving onto next match", e);
+                warn!("Found a glob error {:?}, ignoring and moving onto next match", e);
                 continue;
             }
         };
         let tag = match Tag::read_from_path(path.clone()) {
             Ok(val) => val,
             Err(_) => {
-                println!(
+                info!(
                     "The file {:?} has no tag, it has been left unmodified",
                     path,
                 );
@@ -153,7 +154,7 @@ fn check_song_file_tag_info(tag: &impl TagLike, file_path: &PathBuf, outdir: &Pa
             move_song_file(&file_path, &song_info, &outdir.to_path_buf())?;
         },
         Err(e) => {
-            println!("Song file {:?} has missing field {}", file_path, e.missing_field);
+            info!("Song file {:?} has missing field {}", file_path, e.missing_field);
         }
     }
     Ok(())
