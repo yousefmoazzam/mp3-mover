@@ -23,7 +23,6 @@ mod helpers{
             tag.set_artist(*artist);
             tag.set_album(*album);
             let song_file_path = dir_path.join(songs[i]);
-            //println!("Created file {:?} with song title {}", song_file_path, song_titles[i]);
             File::create(song_file_path.clone()).unwrap();
             tag.write_to_path(song_file_path, id3::Version::Id3v24).unwrap();
         }
@@ -95,7 +94,6 @@ mod tests{
         let pathbuf_iter = read_iter.map(|entry| entry.unwrap().path());
         let subdirs: Vec<PathBuf> = pathbuf_iter.collect();
         for artist in artists {
-            //println!("{:?}", outdir.path().join(artist));
             assert_eq!(
                 subdirs.contains(&outdir.path().join(artist)), true
             );
@@ -105,7 +103,6 @@ mod tests{
         let artist_album_iter = zip(artists, albums);
         for (artist, album) in artist_album_iter {
             let album_path = outdir.as_ref().to_path_buf().join(artist).join(album);
-            //println!("{:?}", album_path);
             assert_eq!(album_path.try_exists().unwrap(), true);
         }
 
@@ -119,7 +116,6 @@ mod tests{
                 .join(artist)
                 .join(album)
                 .join(song);
-            println!("Seeing if this path exists {:?}", song_path);
             assert_eq!(song_path.try_exists().unwrap(), true);
         }
         let dir_two_expected_song_files = dir_two_song_titles.map(
@@ -131,7 +127,6 @@ mod tests{
                 .join(artist)
                 .join(album)
                 .join(song);
-            //println!("{:?}", song_path);
             assert_eq!(song_path.try_exists().unwrap(), true);
         }
     }
