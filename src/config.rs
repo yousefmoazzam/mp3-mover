@@ -4,8 +4,8 @@ use std::path::PathBuf;
 use std::fs::{read_dir, create_dir_all};
 
 pub struct Config {
-    input_path: String,
-    output_path: String,
+    pub input_path: String,
+    pub output_path: String,
 }
 
 impl Config {

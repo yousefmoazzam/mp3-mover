@@ -41,7 +41,7 @@ mod tests{
 
     use crate::helpers::create_dir_with_song_files;
 
-    use mp3_mover::run;
+    use mp3_mover::{run, config::Config};
 
     #[test]
     fn find_song_files_in_two_dirs() {
@@ -85,9 +85,17 @@ mod tests{
         // Setup output dir to place renamed song files in
         let outdir = tempdir().unwrap();
 
+        // Create config instance
+        let args = [
+            "/path/to/program".to_string(),
+            indir.as_ref().to_str().unwrap().to_string(),
+            outdir.as_ref().to_str().unwrap().to_string(),
+        ];
+        let config = Config::new(&args).unwrap();
+
         // Run function to search through all subdirs in input dir and rename+move song files into
         // the output dir
-        let res = run(indir.as_ref(), outdir.as_ref());
+        let res = run(config);
 
         // Check output dir has expected subdirs
         let read_iter = read_dir(outdir.path()).unwrap();

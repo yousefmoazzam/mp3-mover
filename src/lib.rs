@@ -1,3 +1,5 @@
+pub mod config;
+
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::fs::{create_dir_all, rename, read_dir, DirEntry};
@@ -5,6 +7,8 @@ use std::fs::{create_dir_all, rename, read_dir, DirEntry};
 use glob::{Paths, glob};
 use id3::{Tag, TagLike};
 use log::{info, warn};
+
+use config::Config;
 
 #[derive(Debug)]
 struct SongInfo<'a> {
@@ -91,8 +95,8 @@ fn find_song_files(dir: &PathBuf) -> Option<Paths> {
         .expect("Glob pattern is hardcoded so should not be an invalid pattern"))
 }
 
-pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<()> {
-    let contents = read_dir(indir)?;
+pub fn run(config: Config) -> std::io::Result<()> {
+    let contents = read_dir(config.input_path)?;
     for child in contents {
         let elem = match child {
             Ok(val) => val,
@@ -104,7 +108,7 @@ pub fn run(indir: &Path, outdir: &Path) -> std::io::Result<()> {
         if !elem.path().is_dir() {
             continue;
         }
-        check_song_files(&elem, outdir)?;
+        check_song_files(&elem, Path::new(&config.output_path))?;
     }
     Ok(())
 }
