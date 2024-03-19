@@ -4,8 +4,8 @@ use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::fs::{create_dir_all, rename, read_dir, DirEntry};
 
+use audiotags::{AudioTag,FlacTag,Id3v2Tag,Mp4Tag,TagType};
 use glob::{Paths, glob};
-use id3::{Tag, TagLike};
 use log::{info, warn};
 
 use config::Config;
@@ -28,7 +28,7 @@ impl Display for MissingSongInfo {
     }
 }
 
-fn check_tag_info(tag: &impl TagLike) -> Result<SongInfo, MissingSongInfo> {
+fn check_tag_info(tag: &impl AudioTag) -> Result<SongInfo, MissingSongInfo> {
     let title = tag.title();
 
     let artist = match tag.artist() {
@@ -40,7 +40,7 @@ fn check_tag_info(tag: &impl TagLike) -> Result<SongInfo, MissingSongInfo> {
         }
     };
 
-    let album = match tag.album() {
+    let album = match tag.album_title() {
         Some(val) => val,
         None => {
             return Err(
@@ -134,23 +134,51 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> 
                 continue;
             }
         };
-        let tag = match Tag::read_from_path(path.clone()) {
-            Ok(val) => val,
-            Err(_) => {
+        let file_extension = match path.extension() {
+            Some(val) => val.to_str().expect("Expected valid unicode in file extension"),
+            None => {
                 info!(
-                    "The file {:?} has no tag, it has been left unmodified",
+                    "The file {:?} has no file extension so the appropriate tag cannot be inferred, skipping",
                     path,
                 );
-                continue;
+                continue
             }
         };
-        check_song_file_tag_info(&tag, &path, outdir)?;
+        let tag_type = match file_extension {
+            "flac" => TagType::Flac,
+            "mp3" => TagType::Id3v2,
+            "mp4" => TagType::Mp4,
+            _ => {
+                info!(
+                    "Unsupported file extension encountered for file {:?}, skipping",
+                    path,
+                );
+                continue
+            }
+        };
+        match tag_type {
+            TagType::Flac => {
+                check_song_file_tag_info(
+                    &FlacTag::read_from_path(path.clone()).unwrap(), &path, outdir
+                )?
+            },
+            TagType::Id3v2 => {
+                check_song_file_tag_info(
+                    &Id3v2Tag::read_from_path(path.clone()).unwrap(), &path, outdir
+                )?
+            },
+            TagType::Mp4 => {
+                check_song_file_tag_info(
+                    &Mp4Tag::read_from_path(path.clone()).unwrap(), &path, outdir
+                )?
+            },
+        };
     }
     Ok(())
 }
 
 
-fn check_song_file_tag_info(tag: &impl TagLike, file_path: &PathBuf, outdir: &Path) -> std::io::Result<()> {
+fn check_song_file_tag_info(tag: &impl AudioTag, file_path: &PathBuf, outdir: &Path) -> std::io::Result<()> {
     let tag_info = check_tag_info(tag);
     match tag_info {
         Ok(song_info) => {
@@ -171,19 +199,20 @@ mod tests {
 
     use glob::GlobResult;
     use id3::{Tag,TagLike};
+    use audiotags::{AudioTagEdit,Id3v2Tag};
     use tempfile::tempdir;
 
     use super::*;
 
     #[test]
     fn correct_tag() {
-        let mut tag = Tag::new();
+        let mut tag = Id3v2Tag::new();
         let dummy_title = "Dummy Title";
         let dummy_artist = "Dummy Artist";
         let dummy_album = "Dummy Album";
-        tag.set_title(String::from(dummy_title));
-        tag.set_artist(String::from(dummy_artist));
-        tag.set_album(String::from(dummy_album));
+        tag.set_title(dummy_title);
+        tag.set_artist(dummy_artist);
+        tag.set_album_title(dummy_album);
         let result = check_tag_info(&tag).unwrap();
         assert_eq!(result.title, Some(dummy_title));
         assert_eq!(result.artist, dummy_artist);
@@ -192,11 +221,11 @@ mod tests {
 
     #[test]
     fn tag_with_missing_title() {
-        let mut tag = Tag::new();
+        let mut tag = Id3v2Tag::new();
         let dummy_artist = "Dummy Artist";
         let dummy_album = "Dummy Album";
         tag.set_artist(dummy_artist);
-        tag.set_album(dummy_album);
+        tag.set_album_title(dummy_album);
         let result = check_tag_info(&tag).unwrap();
         assert_eq!(result.title, None);
         assert_eq!(result.artist, dummy_artist);
@@ -205,18 +234,18 @@ mod tests {
 
     #[test]
     fn tag_with_missing_artist() {
-        let mut tag = Tag::new();
+        let mut tag = Id3v2Tag::new();
         let dummy_title = "Dummy Title";
         let dummy_album = "Dummy Album";
         tag.set_title(dummy_title);
-        tag.set_album(dummy_album);
+        tag.set_album_title(dummy_album);
         let result = check_tag_info(&tag).unwrap_err();
         assert_eq!(result.to_string(), "Missing field: artist");
     }
 
     #[test]
     fn tag_with_missing_album() {
-        let mut tag = Tag::new();
+        let mut tag = Id3v2Tag::new();
         let dummy_title = "Dummy Title";
         let dummy_artist = "Dummy Artist";
         tag.set_title(dummy_title);
