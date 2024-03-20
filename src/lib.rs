@@ -4,7 +4,7 @@ use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::fs::{create_dir_all, rename, read_dir, DirEntry};
 
-use audiotags::{AudioTag,FlacTag,Id3v2Tag,Mp4Tag,TagType};
+use audiotags::{AudioTag,FlacTag,Id3v2Tag,Mp4Tag};
 use glob::{Paths, glob};
 use log::{info, warn};
 
@@ -144,10 +144,22 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> 
                 continue
             }
         };
-        let tag_type = match file_extension {
-            "flac" => TagType::Flac,
-            "mp3" => TagType::Id3v2,
-            "mp4" => TagType::Mp4,
+        match file_extension {
+            "flac" => {
+                check_song_file_tag_info(
+                    &FlacTag::read_from_path(path.clone()).unwrap(), &path, outdir
+                )?
+            },
+            "mp3" => {
+                check_song_file_tag_info(
+                    &Id3v2Tag::read_from_path(path.clone()).unwrap(), &path, outdir
+                )?
+            },
+            "mp4" => {
+                check_song_file_tag_info(
+                    &Mp4Tag::read_from_path(path.clone()).unwrap(), &path, outdir
+                )?
+            },
             _ => {
                 info!(
                     "Unsupported file extension encountered for file {:?}, skipping",
@@ -155,23 +167,6 @@ fn check_song_files(dir_entry: &DirEntry, outdir: &Path) -> std::io::Result<()> 
                 );
                 continue
             }
-        };
-        match tag_type {
-            TagType::Flac => {
-                check_song_file_tag_info(
-                    &FlacTag::read_from_path(path.clone()).unwrap(), &path, outdir
-                )?
-            },
-            TagType::Id3v2 => {
-                check_song_file_tag_info(
-                    &Id3v2Tag::read_from_path(path.clone()).unwrap(), &path, outdir
-                )?
-            },
-            TagType::Mp4 => {
-                check_song_file_tag_info(
-                    &Mp4Tag::read_from_path(path.clone()).unwrap(), &path, outdir
-                )?
-            },
         };
     }
     Ok(())
